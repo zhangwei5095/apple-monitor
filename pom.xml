@@ -5,57 +5,50 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.appleframework.monitor</groupId>
 	<artifactId>apple-monitor</artifactId>
-	<version>0.0.7.RELEASE</version>
+	<version>0.1.2.RELEASE</version>
 	<packaging>jar</packaging>
 	<name>apple-monitor</name>
 	<url>http://mvnrepo.appleframework.com</url>
 
 	<properties>
-		<spring.version>4.0.5.RELEASE</spring.version>
-		<apple.version>0.1.4.RELEASE</apple.version>
-		<config.version>0.1.5.RELEASE</config.version>
-		<boot.version>0.2.2.RELEASE</boot.version>
-		<orm.version>0.0.9.RELEASE</orm.version>
+		<spring.version>4.2.0.RELEASE</spring.version>
+		<apple.version>0.1.5.RELEASE</apple.version>
+		<config.version>0.2.1.RELEASE</config.version>
+		<boot.version>0.3.0.RELEASE</boot.version>
+		<orm.version>0.1.3.RELEASE</orm.version>
 		<aspectj.version>1.6.8</aspectj.version>
+		<jetty.version>8.1.17.v20150415</jetty.version>
 	</properties>
 
 	<dependencies>
+	
+		<dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-websocket</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
 
 		<dependency>
 			<groupId>com.appleframework</groupId>
 			<artifactId>apple-core</artifactId>
 			<version>${apple.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.validation</groupId>
-    				<artifactId>validation-api</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-  					<artifactId>commons-logging</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>commons-lang</groupId>
-  					<artifactId>commons-lang</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>com.appleframework</groupId>
 			<artifactId>apple-web</artifactId>
 			<version>${apple.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.validation</groupId>
-					<artifactId>validation-api</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>com.appleframework</groupId>
 			<artifactId>apple-exception</artifactId>
+			<version>${apple.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.appleframework</groupId>
+			<artifactId>apple-model</artifactId>
 			<version>${apple.version}</version>
 		</dependency>
 
@@ -85,16 +78,6 @@
 			<groupId>com.appleframework.orm</groupId>
 			<artifactId>apple-orm-mybatis</artifactId>
 			<version>${orm.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.validation</groupId>
-					<artifactId>validation-api</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.hibernate</groupId>
-					<artifactId>hibernate-validator</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -241,12 +224,29 @@
 			<artifactId>jpush-client</artifactId>
 			<version>3.1.3</version>
 		</dependency>
+		
+		<dependency>
+		    <groupId>com.jcraft</groupId>
+		    <artifactId>jsch</artifactId>
+		    <version>0.1.53</version>
+		</dependency>
 		 
 	</dependencies>
 
 
 	<build>
-
+		<!-- 
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>log4j.properties</exclude>
+					<exclude>system.properties</exclude>
+				</excludes>
+			</resource>
+		</resources>
+		 -->
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -367,7 +367,6 @@
 			</plugins>
 		</pluginManagement>
 		<plugins>
-			
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
@@ -399,13 +398,13 @@
 		<repository>
 			<id>nexus-releases</id>
 			<name>Local Nexus Releases Repository</name>
-			<url>http://mvnrepo.appleframework.com:8787/nexus/content/repositories/releases</url>
+			<url>http://nexus.9zhiad.com:8081/nexus/content/repositories/releases</url>
 		</repository>
 
 		<snapshotRepository>
 			<id>nexus-snapshots</id>
 			<name>Local Nexus Snapshots Repository</name>
-			<url>http://mvnrepo.appleframework.com:8787/nexus/content/repositories/snapshots</url>
+			<url>http://nexus.9zhiad.com:8081/nexus/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 

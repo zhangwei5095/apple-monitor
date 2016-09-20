@@ -24,6 +24,8 @@ public class AppInfoEntity implements Serializable {
     private Integer servicePort;
 
     private String installPath;
+    
+    private String logLevel;
 
     private Integer disorder;
 
@@ -36,6 +38,10 @@ public class AppInfoEntity implements Serializable {
     private String confGroup;
 
     private String confEnv;
+    
+    private String startParam;
+    
+    private String memMax;
 
     private Date createTime;
 
@@ -186,4 +192,29 @@ public class AppInfoEntity implements Serializable {
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
     }
+
+	public String getLogLevel() {
+		return logLevel;
+	}
+
+	public void setLogLevel(String logLevel) {
+		this.logLevel = logLevel;
+	}
+
+	public String getStartParam() {
+		return startParam;
+	}
+
+	public void setStartParam(String startParam) {
+		this.startParam = startParam;
+	}
+
+	public String getMemMax() {
+		return memMax;
+	}
+
+	public void setMemMax(String memMax) {
+		this.memMax = memMax;
+	}
+    
 }

@@ -8,8 +8,10 @@
     info.web_port as webPort, info.web_context as webContext, 
     info.jmx_port as jmxPort, info.service_port as servicePort, 
     info.install_path as installPath, info.disorder as disorder, 
-    info.remark as remark, info.state as state, config.is_alert as isAlert,
-    info.create_time as createTime, info.update_time as updateTime
+    info.remark as remark, info.state as state, info.conf_env as confEnv,
+    info.create_time as createTime, info.update_time as updateTime,
+    config.is_alert as isAlert, info.log_level as logLevel,
+    info.start_param as startParam, info.mem_max as memMax
   </sql>
   
   <select id="selectByPage" resultType="com.appleframework.monitor.model.AppInfoBo">
@@ -18,19 +20,30 @@
     
     from t_app_info as info, t_app_config as config
     where ( info.state = 0 or info.state = 1) and info.id = config.id
-    <if test="se.keyword != null" >
+    <if test="se.keyword != null and se.keyword !=''" >
        and ( info.app_name like '%${se.keyword}%' or info.install_path like '%${se.keyword}%' or
        		info.node_id in (
        			select node.id from t_node_info as node where node.ip like '%${se.keyword}%' 
        		)
        )
     </if>
-    <if test="so.nodeId != null" >
+    <if test="so.nodeId != null and so.nodeId !=''" >
        and  info.node_id = ${so.nodeId} 
     </if>
-    <if test="so.clusterId != null" >
+    <if test="so.clusterId != null and so.clusterId !=''" >
        and  info.cluster_id = ${so.clusterId} 
     </if>
+    
+    <if test="so.appVersion != null and so.appVersion !=''" >
+       and  info.app_version like '%${so.appVersion}%'
+    </if>
+    <if test="so.confEnv != null and so.confEnv !='' " >
+       and  info.conf_env like '%${so.confEnv}%'
+    </if>
+    <if test="so.logLevel != null and so.logLevel !='' " >
+       and  info.log_level = '${so.logLevel}'
+    </if>
+    
     order by 
     
     <choose>

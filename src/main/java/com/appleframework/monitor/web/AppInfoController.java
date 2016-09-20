@@ -1,12 +1,11 @@
 package com.appleframework.monitor.web;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.appleframework.config.core.PropertyConfigurer;
+import com.appleframework.jmx.core.util.StringUtils;
 import com.appleframework.jmx.database.entity.AppClusterEntity;
 import com.appleframework.jmx.database.entity.AppInfoEntity;
 import com.appleframework.jmx.database.entity.NodeInfoEntity;
@@ -22,8 +23,12 @@ import com.appleframework.jmx.database.service.AppInfoService;
 import com.appleframework.jmx.database.service.NodeInfoService;
 import com.appleframework.model.Search;
 import com.appleframework.model.page.Pagination;
+import com.appleframework.monitor.model.AppCommandParam;
 import com.appleframework.monitor.model.AppInfoSo;
+import com.appleframework.monitor.model.CommandExeType;
+import com.appleframework.monitor.model.Log4jLevelType;
 import com.appleframework.monitor.service.AppInfoSearchService;
+import com.appleframework.monitor.service.CommandService;
 import com.appleframework.web.bean.Message;
 
 @Controller
@@ -42,12 +47,15 @@ public class AppInfoController extends BaseController {
 	@Resource
 	private NodeInfoService nodeInfoService;
 	
+	@Resource
+	private CommandService commandService;
+	
+	private String websocketUrl = PropertyConfigurer.getString("websocket.url");	
+
 	private String viewModel = "app_info/";
 	
 	@RequestMapping(value = "/list")
-	public String list(Model model, Pagination page, 
-			Search search, AppInfoSo so, HttpServletRequest request) {
-		
+	public String list(Model model, Pagination page, Search search, AppInfoSo so) {
 		page = appInfoSearchService.findPage(page, search, so);
 		List<NodeInfoEntity> nodeInfoList = nodeInfoService.findAll();
 		List<AppClusterEntity> appGroupList = appClusterService.findAll();
@@ -64,6 +72,7 @@ public class AppInfoController extends BaseController {
 		model.addAttribute("APP_CLUSTER_LIST", appGroupList);
 		model.addAttribute("NODE_INFO_MAP", nodeInfoMap);
 		model.addAttribute("APP_CLUSTER_MAP", appGroupMap);
+		model.addAttribute("LOG_LEVEL_TYPES", getLog4jLevelTypes());
 		model.addAttribute("se", search);
 		model.addAttribute("so", so);
 		model.addAttribute("page", page);
@@ -71,7 +80,7 @@ public class AppInfoController extends BaseController {
 	}
 	
 	@RequestMapping(value = "/list_for_cluster")
-	public String listForCluster(Model model, Integer clusterId, HttpServletRequest request) {
+	public String listForCluster(Model model, Integer clusterId) {
 		
 		List<NodeInfoEntity> nodeInfoList = nodeInfoService.findAll();
 		List<AppClusterEntity> appGroupList = appClusterService.findAll();
@@ -90,33 +99,33 @@ public class AppInfoController extends BaseController {
 		model.addAttribute("NODE_INFO_LIST", nodeInfoList);
 		model.addAttribute("APP_CLUSTER_LIST", appGroupList);
 		model.addAttribute("NODE_INFO_MAP", nodeInfoMap);
-		model.addAttribute("APP_CLUSTER_MAP", appGroupMap);
+		model.addAttribute("APP_CLUSTER_MAP", appGroupMap);		
 		model.addAttribute("list", list);
 		return viewModel + "list_for_cluster";
 	}
 	
 	@RequestMapping(value = "/get")
-	public @ResponseBody AppInfoEntity get(Model model, Integer id, HttpServletRequest request) {
+	public @ResponseBody AppInfoEntity get(Model model, Integer id) {
 		AppInfoEntity info = appInfoService.get(id);
 		return info;
 	}
 	
 	@RequestMapping(value = "/edit", method = RequestMethod.GET)
-	public String edit(Model model, Integer id, HttpServletResponse response) throws Exception {
+	public String edit(Model model, Integer id) throws Exception {
 		AppInfoEntity info = appInfoService.get(id);
 		model.addAttribute("info", info);
 		return "app_info/edit";
 	}
 	
 	@RequestMapping(value = "/view", method = RequestMethod.GET)
-	public String view(Model model, Integer id, HttpServletResponse response) throws Exception {
+	public String view(Model model, Integer id) throws Exception {
 		AppInfoEntity info = appInfoService.get(id);
         model.addAttribute("info", info);
 		return "app_info/view";
 	}
 	
 	@RequestMapping(value = "/add", method = RequestMethod.GET)
-	public String add(Model model, HttpServletResponse response) throws Exception {
+	public String add(Model model) throws Exception {
 		return "app_info/add";
 	}
 	
@@ -144,46 +153,41 @@ public class AppInfoController extends BaseController {
 		}
 	}
 	
-	/*
-	@RequestMapping(value = "/save")
-	public String save(Model model, AppInfo appInfo, HttpServletRequest request) {
-		try {
-			appInfoService.insert(appInfo);
-		} catch (ServiceException e) {
-			addErrorMessage(model, e.getMessage());
-			return ERROR_VIEW;
-		}
-		addSuccessMessage(model, "添加应用成功", "list");
-		return SUCCESS_VIEW;
+	public List<Log4jLevelType> getLog4jLevelTypes() {
+		return Arrays.asList(Log4jLevelType.values());
 	}
 	
-	
-	
-	@RequestMapping(value = "/update")
-	public String update(Model model, AppInfo appInfo, HttpServletResponse response) {
-		try {
-			AppInfo old = appInfoService.get(appInfo.getId());
-			old.setCode(appInfo.getCode());
-			old.setName(appInfo.getName());
-			old.setRemark(appInfo.getRemark());
-			old.setUpdateTime(new Date());
-			appInfoService.update(old);
-		} catch (ServiceException e) {
-			addErrorMessage(model, e.getMessage());
-			return "/commons/error_ajax";
-		}
-		addSuccessMessage(model, "修改应用成功", "list");
-		return "/commons/success_ajax";
+	@RequestMapping(value = "/command")
+	public String commandStart(Model model, Integer id, String command) {
+		AppInfoEntity appInfo = appInfoService.get(id);
+		NodeInfoEntity nodeInfo = nodeInfoService.get(appInfo.getNodeId());
+		AppCommandParam param = AppCommandParam.create(id, nodeInfo.getHost(), 
+				appInfo.getInstallPath(), appInfo.getConfEnv());
+		commandService.doExe(param, CommandExeType.valueOf(command.toUpperCase()));
+		model.addAttribute("taskId", id);
+		model.addAttribute("websocketUrl", websocketUrl);
+		return viewModel + "command";
 	}
 	
-	// AJAX唯一验证
-	@RequestMapping(value = "/check_code", method = RequestMethod.GET)
-	public @ResponseBody String checkRoleName(String oldCode, String code) {
-		if (appInfoService.isUniqueByCode(oldCode, code)) {
-			return ajax("true");
-		} else {
-			return ajax("false");
+	@RequestMapping(value = "/batch_command")
+	public String batchCommand(Model model, String ids, String command) {
+
+		String[] idds = ids.split(",");
+		for (int j = 0; j < idds.length; j++) {
+			String id = idds[j];
+			if (!StringUtils.isEmpty(id)) {
+
+				AppInfoEntity appInfo = appInfoService.get(Integer.parseInt(id));
+				NodeInfoEntity nodeInfo = nodeInfoService.get(appInfo.getNodeId());
+				AppCommandParam param = AppCommandParam.create(Integer.parseInt(id), nodeInfo.getHost(),
+						appInfo.getInstallPath(), appInfo.getConfEnv());
+				commandService.doExe(param, CommandExeType.valueOf(command.toUpperCase()));
+
+			}
 		}
-	}*/
-		
+		model.addAttribute("taskId", 0);
+		model.addAttribute("websocketUrl", websocketUrl);
+		return viewModel + "command";
+	}
+			
 }

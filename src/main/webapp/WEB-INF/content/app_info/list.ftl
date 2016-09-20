@@ -107,6 +107,66 @@
 			
 		});
 		
+		$("#listTable .btn_up").bind("click", function(){
+			var id = $(this).attr("operatId");
+			var title = $(this).attr("title");
+			
+			art.dialog.open('command?command=restart&id=' + id, {
+				id: 'restart',
+				title: title,
+				width: '100%',
+    			height: '100%',
+				close: function () {}
+			}, false);
+		});
+		
+		$("#listTable .btn_down").bind("click", function(){
+			var id = $(this).attr("operatId");
+			var title = $(this).attr("title");
+			
+			art.dialog.open('command?command=stop&id=' + id, {
+				id: 'stop',
+				title: title,
+				width: '100%',
+    			height: '100%',
+				close: function () {}
+			}, false);
+		});
+		
+		$("#listTable .btn_online").bind("click", function(){
+			var id = $(this).attr("operatId");
+			var title = $(this).attr("title");
+			
+			art.dialog.open('command?command=restart&id=' + id, {
+				id: 'restart',
+				title: title,
+				width: '100%',
+    			height: '100%',
+				close: function () {}
+			}, false);
+		});
+		
+		$("#restartCommandAll").bind("click", function(){
+		
+			var chk_value =[]; 
+			$('input[name="ids"]:checked').each(function(){ 
+				chk_value.push($(this).val()); 
+			}); 
+			if(chk_value.length > 0) {
+				art.dialog.open('/app_info/batch_command?command=restart&ids=' + chk_value, {
+					id: 'viewFrame',
+					title: '批量重启',
+					width: '100%',
+    				height: '100%',
+					close: function () {}
+				}, false);
+			}
+			else {
+				pop_warning("操作提示", "请选择应用！", false, function() {});
+			}
+			
+		});
+		
 	});
 </script>
 
@@ -131,7 +191,13 @@
         	<div class="con_search_top_L left">
                 <p>
                     <span class="group"><label>关键字：</label>
-                    	<input name="keyword" class="c_input_text" type="text" realValue="关键字" value="${(se.keyword)!''}" />
+                    	<input name="keyword" class="c_input_text" type="text" realValue="关键字" value="${(se.keyword)!''}" style="width:100px;" />
+                    </span>
+                    <span class="group"><label>版本：</label>
+                    	<input name="appVersion" class="c_input_text" type="text" realValue="版本" value="${(so.appVersion)!''}"  style="width:100px;" />
+                    </span>
+                    <span class="group"><label>环境：</label>
+                    	<input name="confEnv" class="c_input_text" type="text" realValue="环境" value="${(so.confEnv)!''}"  style="width:100px;" />
                     </span>
                     <span class="group"><label>节点：</label>
                     	<select class="c_select required" id="nodeId" name="nodeId" style="width:150px;">
@@ -147,6 +213,14 @@
 	                    	<#list APP_CLUSTER_LIST as group>
 	                    		<option value="${group.id}" <#if so.clusterId?exists && so.clusterId == group.id>selected</#if>>${group.clusterName}</option>
 	                    	</#list>
+	                 	</select>
+                    </span>
+                    <span class="group"><label>日志级别：</label>
+                    	<select class="c_select required" id="logLevel" name="logLevel" style="width:150px;">
+	                    	<option value="">请选择</option>
+	                    	<#list LOG_LEVEL_TYPES as type>
+	                    		<option value="${type.getName()}" <#if so.logLevel?exists && so.logLevel == type.getName()>selected</#if>>${type.getName()}</option>
+							</#list>
 	                 	</select>
                     </span>
             		<span class="group"><a id="searchButton" href="javascript:;" class="btn_search">搜索</a></span>
@@ -166,19 +240,22 @@
     <table id="listTable" class="table_list list">
         <tr>
         	<th style="line-height:0px; width:5%;" rowspan="2">序号</th>
-        	<th style="line-height:0px; width:12%;" rowspan="2" class="sort" orderField="asc" name="info.app_name">应用名称</th>
-        	<th style="line-height:0px; width:10%;" rowspan="2" class="sort" orderField="asc" name="info.node_id">所在节点</th>
-        	<th style="line-height:0px; width:20%;" rowspan="2" class="sort" orderField="asc" name="info.install_path">安装目录</th>
-        	<th style="line-height:0px; width:6%;" rowspan="2" class="sort" orderField="asc" name="info.install_path">版本</th>
+        	<th style="line-height:0px; width:10%;" rowspan="2" class="sort" orderField="asc" name="info.app_name">应用名称</th>
+        	<th style="line-height:0px; width:8%;" rowspan="2" class="sort" orderField="asc" name="info.node_id">所在节点</th>
+        	<th style="line-height:0px; width:15%;" rowspan="2" class="sort" orderField="asc" name="info.install_path">安装目录</th>
+        	<th style="line-height:0px; width:6%;" rowspan="2" class="sort" orderField="asc" name="info.app_version">版本</th>
+        	<th style="line-height:0px; width:6%;" rowspan="2" class="sort" orderField="asc" name="info.conf_env">环境</th>
+        	<th style="line-height:0px; width:6%;" rowspan="2" class="sort" orderField="asc" name="info.log_level">日志</th>
+            <th style="line-height:0px; width:6%;" rowspan="2" class="sort" orderField="asc" name="info.mem_max">内存</th>
         	<th style="line-height:0px; width:10%;" colspan="3">端口</th>
-        	<th style="line-height:0px; width:6%;" rowspan="2">状态</th>
-        	<th style="line-height:0px; width:6%;" rowspan="2" class="sort" orderField="desc" name="config.is_alert">监控</th>
-        	<th style="line-height:0px; width:8%;" rowspan="2" class="sort" orderField="asc" name="info.update_time">更新时间</th>
-        	<th style="line-height:0px; width:8%;" rowspan="2" class="sort" orderField="asc" name="info.create_time">创建时间</th>
+        	<th style="line-height:0px; width:4%;" rowspan="2">状态</th>
+        	<th style="line-height:0px; width:4%;" rowspan="2" class="sort" orderField="desc" name="config.is_alert">监控</th>
+        	<th style="line-height:0px; width:10%;" rowspan="2" class="sort" orderField="asc" name="info.update_time">更新时间</th>
+        	<!--<th style="line-height:0px; width:8%;" rowspan="2" class="sort" orderField="asc" name="info.create_time">创建时间</th>-->
 			<th style="line-height:0px; width:20%;" rowspan="2">操作</th>
         </tr>
         <tr>
-          <th style="line-height:0px;" class="sort" orderField="desc" name="info.service_port">Dubbo</th>
+          <th style="line-height:0px;" class="sort" orderField="desc" name="info.service_port">SERV</th>
           <th style="line-height:0px;" class="sort" orderField="desc" name="info.web_port">WEB</th>
           <th style="line-height:0px;" class="sort" orderField="desc" name="info.jmx_port">JMX</th>
         </tr>
@@ -189,6 +266,9 @@
 			<td>${NODE_INFO_MAP[info.nodeId?string].host}</td>
 			<td style="text-align:left;">${(info.installPath)!}</td>
 			<td>${(info.appVersion)!}</td>
+			<td>${(info.confEnv)!}</td>
+			<td>${(info.logLevel)!}</td>
+			<td>${(info.memMax)!}</td>
 			<td><#if (info.servicePort > 0)>${info.servicePort}<#else>-</#if></td>
 			<td><#if (info.webPort > 0)>${info.webPort}<#else>-</#if></td>
 			<td><#if (info.jmxPort > 0)>${info.jmxPort}<#else>-</#if></td>
@@ -204,10 +284,10 @@
 			<td>${info.isAlert?string('启动','关闭')}</td>
 			<td>
 				<#if info.updateTime?exists>
-				${info.updateTime?string('yyyy-MM-dd HH:mm:ss')}
+				${info.updateTime?string('MM-dd HH:mm')}
 				<#else>-</#if>
 			</td>
-			<td>${info.createTime?string('yyyy-MM-dd')}</td>
+			<!--<td>${info.createTime?string('yyyy-MM-dd')}</td>-->
 			<td>
 				<!--<a class="btn_icon btn_edit"   href="javascript:;" operatId="${info.id}" title="编辑"></a>
                 <a class="btn_icon btn_detail" href="javascript:;" operatId="${info.id}" title="详情"></a>-->
@@ -217,8 +297,35 @@
 						<a class="btn_icon btn_examine" href="javascript:;" operatId="${info.id}" title="日志信息"></a>
 						<a class="btn_icon btn_effect" href="javascript:;" operatId="${info.id}" title="修改日志级别"></a>
 						<a class="btn_icon btn_view" href="javascript:;" operatId="${info.id}" title="查看监控[${APP_CLUSTER_MAP[info.clusterId?string].clusterName},${NODE_INFO_MAP[info.nodeId?string].host}:${info.jmxPort}]"></a>
+						
+						<a class="btn_icon btn_online" href="javascript:;" operatId="${info.id}" title="重启"></a>
+						<a class="btn_icon btn_down" href="javascript:;" operatId="${info.id}" title="停止"></a>
+						
+					<#else>
+						<a class="btn_icon btn_up" href="javascript:;" operatId="${info.id}" title="启动"></a>
 					</#if>
 				</@appStatus>
+
+				<!--
+								
+				.btn_edit{ background-position:0 0;}
+				.btn_detail{ background-position:0 -50px;}
+				.btn_online{ background-position:0 -100px;}
+				.btn_delete{ background-position:0 -150px;}
+				.btn_up{ background-position:0 -200px;}
+				.btn_down{ background-position:0 -250px;}
+				.btn_enable{ background-position:0 -300px;}
+				.btn_disabled{ background-position:0 -350px;}
+				.btn_empty{ background-position:0 -400px;}
+				.btn_pass{ background-position:0 -450px;}
+				.btn_refuse{ background-position:0 -500px;}
+				.btn_add{ background-position:0 -550px;}
+				.btn_view{ background-position:0 -600px;}
+				.btn_offline{ background-position:0 -650px;}
+				.btn_effect{ background-position:0 -700px;}
+				.btn_examine{ background-position:0 -750px;}
+				
+				-->
 			</td>
         </tr>
         </#list>
@@ -236,6 +343,7 @@
 	    		<a id="startAlertAll" class="btn" href="javascript:void(0);">启动报警</a>
 	    		<a id="stopAlertAll" class="btn" href="javascript:void(0);">关闭报警</a>
 	    		<a id="logLevelAll" class="btn" href="javascript:void(0);">日志级别</a>
+	    		<a id="restartCommandAll" class="btn" href="javascript:void(0);">应用重启</a>
 	    	</div>
 	        
 	         <!-- start of 分页 -->

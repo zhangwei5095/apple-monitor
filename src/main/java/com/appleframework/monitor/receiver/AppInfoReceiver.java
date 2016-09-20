@@ -8,6 +8,7 @@ import org.jgroups.Message;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
 
+import com.appleframework.config.core.PropertyConfigurer;
 import com.appleframework.jmx.database.constant.StateType;
 import com.appleframework.jmx.database.entity.AppClusterEntity;
 import com.appleframework.jmx.database.entity.AppInfoEntity;
@@ -29,12 +30,18 @@ public class AppInfoReceiver extends ReceiverAdapter {
 	private JChannel channel;
 
 	public void start() throws Exception {
-		// 创建一个通道
-		channel = new JChannel();
-		// 创建一个接收器
-		channel.setReceiver(this);
-		// 加入一个群
-		channel.connect("MonitorContainer");
+		boolean broadcastReceiveOpen = PropertyConfigurer.getBoolean("broadcast.receive.open", false);
+		if(broadcastReceiveOpen) {
+			// 创建一个通道
+			channel = new JChannel();
+			// 创建一个接收器
+			channel.setReceiver(this);
+			// 加入一个群
+			channel.connect("MonitorContainer");
+		}
+		else {
+			logger.warn("The Broadcast Receiver Is Closed!");
+		}
 	}
 
 	// 覆盖父类的方法
@@ -60,6 +67,9 @@ public class AppInfoReceiver extends ReceiverAdapter {
 			String confGroup = prop.getProperty("deploy.group");
 			String confDataId = prop.getProperty("deploy.dataId");
 			String confEnv = prop.getProperty("deploy.env");
+			String logLevel = prop.getProperty("log.level");
+			String startParam = prop.getProperty("start.param");
+			String memMax = prop.getProperty("mem.max");
 			
 			int webPort = 0;
 			int jmxPort = 0;
@@ -94,34 +104,12 @@ public class AppInfoReceiver extends ReceiverAdapter {
 			appInfo.setConfGroup(confGroup);
 			appInfo.setConfEnv(confEnv);
 			appInfo.setConfDataid(confDataId);
+			appInfo.setLogLevel(logLevel);
+			appInfo.setStartParam(startParam);
+			appInfo.setMemMax(memMax);
 			
 			appInfo = appInfoService.saveOrUpdate(appInfo);
 						
-			/*ApplicationClusterConfig clusterConfig 
-				= new ApplicationClusterConfig(String.valueOf(appCluster.getId()), appCluster.getClusterName());
-			
-			String url = MessageFormat.format(JSR160ApplicationConfig.URL_FORMAT, nodeInfo.getIp(), String.valueOf(jmxPort));
-			
-			ApplicationConfig appConfig = new JSR160ApplicationConfig();
-			appConfig.setApplicationId(appInfo.getId() + "");
-			appConfig.setHost(nodeInfo.getHost());
-			appConfig.setName(appCluster.getClusterName());
-			appConfig.setType("jsr160");
-			appConfig.setPort(jmxPort);
-			appConfig.setUrl(url);
-			appConfig.setUsername(null);
-			appConfig.setPassword(null);
-			appConfig.setCluster(false);
-			appConfig.setClusterConfig(clusterConfig);
-						
-			try {
-				applicationConfigManager.addOrUpdateApplication(appConfig);
-				
-				applicationDowntimeService.addOrUpdateApplication(appConfig);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}*/
-			
 		} else if (object instanceof String) {
 			logger.warn(object.toString());
 		}

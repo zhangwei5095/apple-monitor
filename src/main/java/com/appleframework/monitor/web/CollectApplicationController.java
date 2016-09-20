@@ -50,6 +50,10 @@ public class CollectApplicationController extends BaseController {
 			String confDataId = request.getParameter("deploy.dataId");
 			String confEnv = request.getParameter("deploy.env");
 			
+			String logLevel = request.getParameter("log.level");
+			String startParam = request.getParameter("start.param");
+			String memMax = request.getParameter("mem.max");
+			
 			int webPort = 0;
 			int jmxPort = 0;
 			int servicePort = 0;
@@ -83,6 +87,9 @@ public class CollectApplicationController extends BaseController {
 			appInfo.setConfGroup(confGroup);
 			appInfo.setConfEnv(confEnv);
 			appInfo.setConfDataid(confDataId);
+			appInfo.setLogLevel(logLevel);
+			appInfo.setStartParam(startParam);
+			appInfo.setMemMax(memMax);
 
 			appInfo = appInfoService.saveOrUpdate(appInfo);
 
